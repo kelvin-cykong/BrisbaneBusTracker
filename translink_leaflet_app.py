@@ -25,7 +25,7 @@ from google.transit import gtfs_realtime_pb2
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
-WEB_ROOT = ROOT / "html"
+WEB_ROOT = ROOT / "files" / "html"
 OPEN_DATA_URL = "https://translink.com.au/about-translink/open-data"
 GTFS_RT_BUS_URL = (
     "https://gtfsrt.api.translink.com.au/api/realtime/SEQ/VehiclePositions/Bus"
@@ -197,8 +197,8 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     server = ThreadingHTTPServer((HOST, PORT), Handler)
-    stops_df = pd.read_csv(ROOT / "data" / "SEQ_GTFS" / "stops.txt")
-    tripID_df = pd.read_csv(ROOT / "data" / "SEQ_GTFS" / "trips.txt")
+    stops_df = pd.read_csv(ROOT / "files" / "data" / "SEQ_GTFS" / "stops.txt")
+    tripID_df = pd.read_csv(ROOT / "files" / "data" / "SEQ_GTFS" / "trips.txt")
     print(f"Loaded datasets from Translink Static Data")
     print(f"Translink Leaflet tracker running at http://{HOST}:{PORT}")
     print(f"Open data page: {OPEN_DATA_URL}")
