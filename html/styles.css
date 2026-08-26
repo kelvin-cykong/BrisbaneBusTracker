@@ -108,6 +108,7 @@ label span,
   text-transform: uppercase;
 }
 
+input,
 select,
 button {
   min-height: 40px;
