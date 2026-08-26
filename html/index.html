@@ -20,8 +20,9 @@
       <section class="controls" aria-label="Bus filters">
 
         <label>
-          <span>Route</span>
-          <select id="routeSelect" placeholder="Type route number"></select>
+          <span>Route ID</span>
+          <input id="routeInput" type="text" inputmode="numeric" list="routeOptions" placeholder="Enter route ID" autocomplete="off">
+          <datalist id="routeOptions"></datalist>
         </label>
 
         <label>
@@ -30,8 +31,13 @@
             <option value="">All directions</option>
           </select>
         </label>
+
         <button id="refreshButton" type="button">Refresh</button>
-        <div class="count" id="count">0 buses</div>
+        <br>
+        <label>
+          <div class="count" id="count">0 buses</div>
+        </label>
+
       </section>
 
       <div id="map" aria-label="Live bus location map"></div>
