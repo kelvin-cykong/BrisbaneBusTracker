@@ -12,7 +12,8 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 }).addTo(map);
 
 const markers = L.layerGroup().addTo(map);
-const routeSelect = document.querySelector("#routeSelect");
+const routeInput = document.querySelector("#routeInput");
+const routeOptions = document.querySelector("#routeOptions");
 const directionSelect = document.querySelector("#directionSelect");
 const refreshButton = document.querySelector("#refreshButton");
 const statusEl = document.querySelector("#status");
@@ -62,12 +63,16 @@ function updateSelectOptions(select, values, allLabel) {
   select.value = values.includes(current) ? current : "";
 }
 
+function updateRouteOptions(values) {
+  routeOptions.replaceChildren(...values.map((value) => new Option(value, value)));
+}
+
 function filteredVehicles() {
-  const route = routeSelect.value;
+  const route = routeInput.value.trim();
   const direction = directionSelect.value;
 
   return vehicles.filter((vehicle) => {
-    const routeMatches = !route || vehicle.route === route;
+    const routeMatches = route && vehicle.route === route;
     const directionMatches = !direction || vehicle.trip_headsign === direction;
     return routeMatches && directionMatches;
   });
@@ -76,7 +81,7 @@ function filteredVehicles() {
 function updateDirectionOptions() {
   const availableDirections = [...new Set(
     vehicles
-      .filter((vehicle) => !routeSelect.value || vehicle.route === routeSelect.value)
+      .filter((vehicle) => vehicle.route === routeInput.value.trim())
       .map((vehicle) => vehicle.trip_headsign)
       .filter(Boolean),
   )].sort();
@@ -85,8 +90,15 @@ function updateDirectionOptions() {
 }
 
 function renderMarkers() {
-  const filtered = filteredVehicles();
   markers.clearLayers();
+
+  const route = routeInput.value.trim();
+  if (!route) {
+    countEl.textContent = "Enter a route ID to show buses";
+    return;
+  }
+
+  const filtered = filteredVehicles();
 
   filtered.forEach((vehicle) => {
     L.marker([vehicle.latitude, vehicle.longitude], { icon: markerIcon(vehicle) })
@@ -94,7 +106,7 @@ function renderMarkers() {
       .addTo(markers);
   });
 
-  const routeText = routeSelect.value ? ` on route ${routeSelect.value}` : "";
+  const routeText = ` on route ${route}`;
   const directionText = directionSelect.value ? `, direction ${directionSelect.value}` : "";
   countEl.textContent = `${filtered.length} of ${vehicles.length} buses${routeText}${directionText}`;
 
@@ -118,7 +130,7 @@ async function loadVehicles() {
     }
 
     vehicles = payload.vehicles || [];
-    updateSelectOptions(routeSelect, payload.routes || [], "All routes");
+    updateRouteOptions(payload.routes || []);
     updateDirectionOptions();
     renderMarkers();
 
@@ -135,7 +147,7 @@ async function loadVehicles() {
   }
 }
 
-routeSelect.addEventListener("change", () => {
+routeInput.addEventListener("input", () => {
   updateDirectionOptions();
   renderMarkers();
 });
