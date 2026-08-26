@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Translink Live Bus Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>Translink Live Bus Map</h1>
+          <p>South East Queensland bus vehicle positions from Translink open data</p>
+        </div>
+        <div class="status" id="status">Loading live feed</div>
+      </header>
+
+      <section class="controls" aria-label="Bus filters">
+
+        <label>
+          <span>Route</span>
+          <select id="routeSelect" placeholder="Type route number"></select>
+        </label>
+
+        <label>
+          <span>Direction</span>
+          <select id="directionSelect">
+            <option value="">All directions</option>
+          </select>
+        </label>
+        <button id="refreshButton" type="button">Refresh</button>
+        <div class="count" id="count">0 buses</div>
+      </section>
+
+      <div id="map" aria-label="Live bus location map"></div>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
