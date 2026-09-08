@@ -20,6 +20,10 @@ from urllib.error import URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
+import zipfile
+import io
+import requests
+
 from google.transit import gtfs_realtime_pb2
 
 import pandas as pd
@@ -88,7 +92,11 @@ def fetch_live_buses() -> dict:
         stop_id = vehicle.stop_id if vehicle.HasField("stop_id") else None
         stop_name = stops_df[stops_df.stop_id == stop_id].stop_name.iloc[0] if stop_id else None
 
-        trip_headsign = tripID_df[tripID_df.trip_id == trip.trip_id].trip_headsign.iloc[0] if trip.trip_id else None
+        try:
+            trip_headsign = tripID_df[tripID_df.trip_id == trip.trip_id].trip_headsign.iloc[0]
+        except IndexError:
+            print(trip.trip_id)
+            trip_headsign = None
 
         vehicles.append(
             {
@@ -197,9 +205,18 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     server = ThreadingHTTPServer((HOST, PORT), Handler)
-    stops_df = pd.read_csv(ROOT / "files" / "data" / "SEQ_GTFS" / "stops.txt")
-    tripID_df = pd.read_csv(ROOT / "files" / "data" / "SEQ_GTFS" / "trips.txt")
-    print(f"Loaded datasets from Translink Static Data")
+    SEQ_dataset_URL = "https://gtfsrt.api.translink.com.au/GTFS/SEQ_GTFS.zip"
+    try:
+        responses = requests.get(SEQ_dataset_URL, timeout=15)
+        responses.raise_for_status()
+        with zipfile.ZipFile(io.BytesIO(responses.content)) as zf:
+            with zf.open("stops.txt") as stops_file:
+                stops_df = pd.read_csv(stops_file)
+            with zf.open("trips.txt") as trips_file:
+                tripID_df = pd.read_csv(trips_file)
+        print(f"Loaded datasets from Translink Static Data")
+    except:
+        print(f"Failed to load datasets from Translink Static Data")
     print(f"Translink Leaflet tracker running at http://{HOST}:{PORT}")
     print(f"Open data page: {OPEN_DATA_URL}")
     print(f"Bus feed: {GTFS_RT_BUS_URL}")
