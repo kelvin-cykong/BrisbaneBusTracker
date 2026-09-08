@@ -41,6 +41,25 @@ function formatTime(value) {
   }).format(new Date(value));
 }
 
+function formatElapsedTime(value) {
+  if (!value) return "Unknown";
+
+  const elapsedSeconds = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
+  if (elapsedSeconds < 60) return `${elapsedSeconds}s ago`;
+
+  const minutes = Math.floor(elapsedSeconds / 60);
+  const seconds = elapsedSeconds % 60;
+  if (minutes < 60) return `${minutes}m ${seconds}s ago`;
+
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m ago`;
+}
+
+function updateElapsedTimes() {
+  document.querySelectorAll(".elapsed-time").forEach((element) => {
+    element.textContent = formatElapsedTime(element.dataset.timestamp);
+  });
+}
+
 function popupHtml(vehicle) {
   const currentStopSequence = vehicle.current_stop_sequence === null ? "Unknown" : vehicle.current_stop_sequence;
   const currentStatus = vehicle.current_status || "Unknown";
@@ -52,7 +71,7 @@ function popupHtml(vehicle) {
     <div class="popup-row"><span>Current Status</span><strong>${currentStatusInText}</strong></div>
     <div class="popup-row"><span>Current Stop Sequence</span><strong>${currentStopSequence}</strong></div>
     <div class="popup-row"><span>Current Stop Sequence Stop Name</span><strong>${vehicle.stop_name || "Unknown"}</strong></div>
-    <div class="popup-row"><span>Updated</span><strong>${formatTime(vehicle.timestamp)}</strong></div>
+    <div class="popup-row"><span>Updated</span><strong class="elapsed-time" data-timestamp="${vehicle.timestamp || ""}">${formatElapsedTime(vehicle.timestamp)}</strong></div>
   `;
 }
 
@@ -89,7 +108,7 @@ function updateDirectionOptions() {
   updateSelectOptions(directionSelect, availableDirections, "All directions");
 }
 
-function renderMarkers() {
+function renderMarkers(fitMap = false) {
   markers.clearLayers();
 
   const route = routeInput.value.trim();
@@ -110,9 +129,9 @@ function renderMarkers() {
   const directionText = directionSelect.value ? `, direction ${directionSelect.value}` : "";
   countEl.textContent = `${filtered.length} of ${vehicles.length} buses${routeText}${directionText}`;
 
-  if (filtered.length) {
+  if (fitMap && filtered.length) {
     const bounds = L.latLngBounds(filtered.map((vehicle) => [vehicle.latitude, vehicle.longitude]));
-    map.fitBounds(bounds.pad(0.1), { maxZoom: 20 });
+    map.fitBounds(bounds.pad(0.05), { maxZoom: 20 });
   }
 }
 
@@ -149,10 +168,11 @@ async function loadVehicles() {
 
 routeInput.addEventListener("input", () => {
   updateDirectionOptions();
-  renderMarkers();
+  renderMarkers(true);
 });
 directionSelect.addEventListener("change", renderMarkers);
 refreshButton.addEventListener("click", loadVehicles);
 
 loadVehicles();
 setInterval(loadVehicles, REFRESH_MS);
+setInterval(updateElapsedTimes, 1000);
